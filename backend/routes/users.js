@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { protect, isAdmin } = require('../middleware/auth');
+const { dummyUsers } = require('../data/dummyUsers');
 
 // @route   GET /api/users/profile/me
 // @desc    Get current user profile
@@ -16,7 +17,20 @@ router.get('/profile/me', protect, async (req, res) => {
 
     res.status(200).json({ success: true, data: user });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    // Fallback: Check dummy users
+    console.log('📍 Using fallback profile retrieval with dummy users');
+    const user = dummyUsers.find((u) => u._id === req.userId);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    res.status(200).json({ 
+      success: true, 
+      data: user,
+      fromFallback: true,
+      message: '✅ Using demo profile data'
+    });
   }
 });
 
@@ -167,7 +181,27 @@ router.get('/', protect, isAdmin, async (req, res) => {
       data: users,
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    // Fallback: Return dummy users
+    console.log('📍 Using fallback users list with dummy users');
+    
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    
+    const paginatedUsers = dummyUsers.slice(skip, skip + limitNum);
+    const total = dummyUsers.length;
+
+    res.status(200).json({
+      success: true,
+      count: paginatedUsers.length,
+      total,
+      page: pageNum,
+      pages: Math.ceil(total / limitNum),
+      data: paginatedUsers,
+      fromFallback: true,
+      message: '📊 Using demo users data',
+    });
   }
 });
 

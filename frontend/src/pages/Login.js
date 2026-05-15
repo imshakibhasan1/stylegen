@@ -58,12 +58,6 @@ const Login = () => {
             <span className="forgot-link">Forgot password?</span>
           </div>
 
-          <div className="form-group">
-            <label>
-              <input type="checkbox" />
-              Keep me signed in for 30 days
-            </label>
-          </div>
 
           <button type="submit" className="btn btn-primary btn-block" disabled={loading}>
             {loading ? 'Signing in...' : 'Sign in'}

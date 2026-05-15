@@ -64,6 +64,7 @@ body {
 /* Forms */
 .form-group {
   margin-bottom: 20px;
+  
 }
 
 .form-row {
@@ -72,8 +73,10 @@ body {
   gap: 20px;
 }
 
+
+
 .form-group label {
-  display: block;
+  display: inline-block;
   font-size: 12px;
   font-weight: 600;
   color: var(--gray-color);

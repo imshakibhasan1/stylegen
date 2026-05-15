@@ -9,9 +9,10 @@ export const useProductStore = create((set) => ({
   searchQuery: '',
   loading: false,
   error: null,
+  isUsingFallback: false,
 
   fetchProducts: async (page = 1, limit = 12, filters = {}) => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
       const queryParams = new URLSearchParams({
         page,
@@ -23,33 +24,55 @@ export const useProductStore = create((set) => ({
       set({
         products: response.data.data,
         loading: false,
+        isUsingFallback: response.data.fromFallback || false,
+        error: response.data.fromFallback ? response.data.message : null,
       });
     } catch (error) {
-      set({ error: error.message, loading: false });
+      console.error('❌ Error fetching products:', error.message);
+      set({ 
+        error: 'Failed to load products. Please try again.', 
+        loading: false,
+        products: [],
+      });
     }
   },
 
   fetchFeaturedProducts: async () => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
       const response = await axiosInstance.get('/products/featured/all');
       set({
         products: response.data.data,
         loading: false,
+        isUsingFallback: response.data.fromFallback || false,
+        error: response.data.fromFallback ? response.data.message : null,
       });
     } catch (error) {
-      set({ error: error.message, loading: false });
+      console.error('❌ Error fetching featured products:', error.message);
+      set({ 
+        error: 'Failed to load featured products. Please try again.', 
+        loading: false,
+        products: [],
+      });
     }
   },
 
   fetchProductById: async (id) => {
-    set({ loading: true });
+    set({ loading: true, error: null });
     try {
       const response = await axiosInstance.get(`/products/${id}`);
-      set({ loading: false });
+      set({ 
+        loading: false,
+        isUsingFallback: response.data.fromFallback || false,
+        error: response.data.fromFallback ? response.data.message : null,
+      });
       return response.data.data;
     } catch (error) {
-      set({ error: error.message, loading: false });
+      console.error('❌ Error fetching product:', error.message);
+      set({ 
+        error: 'Failed to load product details. Please try again.', 
+        loading: false,
+      });
       throw error;
     }
   },
@@ -57,9 +80,14 @@ export const useProductStore = create((set) => ({
   fetchCategories: async () => {
     try {
       const response = await axiosInstance.get('/categories');
-      set({ categories: response.data.data });
+      set({ 
+        categories: response.data.data,
+        isUsingFallback: response.data.fromFallback || false,
+        error: response.data.fromFallback ? response.data.message : null,
+      });
     } catch (error) {
-      set({ error: error.message });
+      console.error('❌ Error fetching categories:', error.message);
+      set({ error: 'Failed to load categories. Please try again.' });
     }
   },
 
@@ -81,4 +109,6 @@ export const useProductStore = create((set) => ({
       return { filteredProducts: filtered, selectedCategory: category, searchQuery };
     });
   },
+
+  clearError: () => set({ error: null }),
 }));

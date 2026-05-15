@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Category = require('../models/Category');
 const { protect, isAdmin } = require('../middleware/auth');
+const { dummyCategories } = require('../data/dummyProducts');
 
 // @route   GET /api/categories
 // @desc    Get all categories
@@ -14,7 +15,16 @@ router.get('/', async (req, res) => {
 
     res.status(200).json({ success: true, count: categories.length, data: categories });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.warn('⚠️ Database error, using fallback categories:', error.message);
+    
+    // Fallback to dummy categories
+    res.status(200).json({ 
+      success: true, 
+      count: dummyCategories.length, 
+      data: dummyCategories,
+      fromFallback: true,
+      message: '📦 Showing demo categories (database unavailable)'
+    });
   }
 });
 
@@ -31,7 +41,21 @@ router.get('/:id', async (req, res) => {
 
     res.status(200).json({ success: true, data: category });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.warn('⚠️ Database error, checking fallback categories:', error.message);
+    
+    // Fallback to dummy categories
+    const dummyCategory = dummyCategories.find(c => c._id === req.params.id);
+    
+    if (dummyCategory) {
+      return res.status(200).json({ 
+        success: true, 
+        data: dummyCategory,
+        fromFallback: true,
+        message: '📦 Showing demo category (database unavailable)'
+      });
+    }
+    
+    res.status(404).json({ success: false, message: 'Category not found' });
   }
 });
 
